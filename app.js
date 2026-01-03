@@ -3,6 +3,23 @@
 // ============================================
 
 // State Management
+
+// Firebase configuration from Firebase Console
+const firebaseConfig = {
+  apiKey: "AIzaSyD5bbdw9K7hx738oYGxWCDKlYBs4CZJnpo",
+  authDomain: "internconnect-ec09e.firebaseapp.com",
+  projectId: "internconnect-ec09e",
+  storageBucket: "internconnect-ec09e.firebasestorage.app",
+  messagingSenderId: "617689931580",
+  appId: "1:617689931580:web:a5f6e6437cedae296d8839",
+  measurementId: "G-QHKGHHM7KP"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
 const state = {
   currentPage: "home",
   internships: [],
@@ -234,6 +251,7 @@ function navigate(page) {
 // ============================================
 
 function Navigation() {
+  const user = auth.currentUser;
   const pages = [
     {
       id: "home",
@@ -298,8 +316,15 @@ function Navigation() {
         </div>
 
         <div class="nav-actions">
-          <button class="btn btn-ghost">Sign In</button>
-          <button class="btn btn-primary">Get Started</button>
+            ${
+            user
+              ? `<span class="welcome-text">Welcome, ${user.email}</span>
+                 <button class="btn btn-ghost" onclick="signOutUser()">Sign Out</button>`
+              : `<button class="btn btn-ghost" onclick="navigate('signIn'); return false;">Sign In</button>
+                 <button class="btn btn-primary" onclick="navigate('getStarted'); return false;">Get Started</button>`
+            }
+        </div>
+
         </div>
       </div>
     </nav>
@@ -427,6 +452,128 @@ function HomePage() {
     </section>
   `
 }
+
+function SignInPage() {
+  return `
+    <div class="page-container">
+      <div class="page-header">
+        <h1 class="page-title">Sign In</h1>
+        <p class="page-subtitle">Access your InternHub account</p>
+      </div>
+
+      <form class="auth-form" onsubmit="signIn(event)">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="signInEmail" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="signInPassword" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+        <p class="form-footer">
+          Don't have an account? 
+          <a href="#" onclick="navigate('getStarted'); return false;">Get Started</a>
+        </p>
+      </form>
+    </div>
+  `;
+}
+
+function GetStartedPage() {
+  return `
+    <div class="page-container">
+      <div class="page-header">
+        <h1 class="page-title">Get Started</h1>
+        <p class="page-subtitle">Create your InternHub account</p>
+      </div>
+
+      <form class="auth-form" onsubmit="signUp(event)">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="signUpEmail" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="signUpPassword" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+        <p class="form-footer">
+          Already have an account? 
+          <a href="#" onclick="navigate('signIn'); return false;">Sign In</a>
+        </p>
+      </form>
+    </div>
+  `;
+}
+
+
+function signIn(event) {
+  event.preventDefault();
+  const email = document.getElementById("signInEmail").value;
+  const password = document.getElementById("signInPassword").value;
+
+  auth.signInWithEmailAndPassword(email, password)
+    .then((userCredential) => {
+      const user = userCredential.user;
+      alert(`Welcome back, ${user.email}`);
+      state.currentPage = "home";
+      render(); // <-- ensures navbar updates
+    })
+    .catch((error) => {
+      alert(error.message);
+    });
+}
+
+
+function signUp(event) {
+  event.preventDefault();
+  const email = document.getElementById("signUpEmail").value;
+  const password = document.getElementById("signUpPassword").value;
+
+  auth.createUserWithEmailAndPassword(email, password)
+    .then((userCredential) => {
+      const user = userCredential.user;
+      alert(`Account created! Welcome, ${email}`);
+      navigate("home");
+    })
+    .catch((error) => {
+      alert(error.message);
+    });
+}
+
+function signOutUser() {
+  auth.signOut()
+    .then(() => {
+      alert("You have signed out successfully.");
+      state.currentPage = "home";
+      render(); // Re-render the app to update navbar
+    })
+    .catch((error) => {
+      alert("Error signing out: " + error.message);
+    });
+}
+
+
+
+
+function handleSignIn() {
+  const email = document.getElementById("signInEmail").value
+  const password = document.getElementById("signInPassword").value
+
+  // Temporary: simple mock authentication
+  if (email && password) {
+    alert(`Welcome back, ${email}! (This would log you in)`)
+    navigate("home")
+  } else {
+    alert("Please enter your email and password.")
+  }
+}
+
+
+
+
+
 
 function ExplorePage() {
   const filteredInternships = MOCK_INTERNSHIPS.filter((internship) => {
@@ -813,10 +960,10 @@ function TrendsPage() {
           <h3>Industry Growth</h3>
           <div class="growth-stats">
             ${[
-              { sector: "Tech", growth: 24 },
-              { sector: "Finance", growth: 18 },
-              { sector: "Healthcare", growth: 16 },
-              { sector: "E-commerce", growth: 22 },
+              { sector: "Tech", growth: 5.2 },
+              { sector: "Finance", growth: 16.2 },
+              { sector: "Healthcare", growth: 17.2 },
+              { sector: "E-commerce", growth: 18.7 },
             ]
               .map(
                 (item, index) => `
@@ -840,7 +987,8 @@ function TrendsPage() {
 }
 
 function CommunityPage() {
-  let filteredReviews = [...REVIEWS]
+  const filteredReviews = state.reviews ? [...state.reviews] : [];
+
 
   // Apply filters
   if (state.communityFilters.company) {
@@ -1039,7 +1187,7 @@ function CommunityPage() {
                 ${review.warnings
                   .map(
                     (warning) => `
-                  <span class="warning-badge">⚠️ ${warning}</span>
+                  <span class="warning-badge"> ${warning}</span>
                 `,
                   )
                   .join("")}
@@ -1220,83 +1368,138 @@ function toggleReviewForm() {
 }
 
 function submitReview(event) {
-  event.preventDefault()
+  event.preventDefault();
 
-  // Get form values
-  const company = document.getElementById("reviewCompany").value
-  const role = document.getElementById("reviewRole").value
-  const author = document.getElementById("reviewAuthor").value
-  const rating = Number.parseInt(document.getElementById("reviewRating").value)
-  const text = document.getElementById("reviewText").value
+  const user = auth.currentUser;
+  if (!user) {
+    alert("You must be signed in to submit a review.");
+    return;
+  }
 
-  // Get selected warnings
-  const warningCheckboxes = document.querySelectorAll('input[name="warnings"]:checked')
-  const warnings = Array.from(warningCheckboxes).map((cb) => cb.value)
+  const company = document.getElementById("reviewCompany").value;
+  const role = document.getElementById("reviewRole").value;
+  const author = document.getElementById("reviewAuthor").value;
+  const rating = Number.parseInt(document.getElementById("reviewRating").value);
+  const text = document.getElementById("reviewText").value;
 
-  // Create review object - this will be sent to backend
-  const newReview = {
-    id: REVIEWS.length + 1,
+  const warningCheckboxes = document.querySelectorAll('input[name="warnings"]:checked');
+  const warnings = Array.from(warningCheckboxes).map((cb) => cb.value);
+
+  const reviewData = {
     company,
     role,
     author,
     rating,
     text,
     warnings,
-    verified: false, // Backend will verify
+    verified: false,          // will be manually verified later
     helpful: 0,
-    date: "Just now",
-  }
+    date: new Date().toISOString(),
+    userId: user.uid          // track which user submitted
+  };
 
-  // Add to reviews (in real app, this would be an API call)
-  REVIEWS.unshift(newReview)
-
-  // Show success message
-  alert("Thank you for your review! It will be verified and published soon.")
-
-  // Close form and refresh
-  state.showReviewForm = false
-  render()
+  db.collection("reviews")
+    .add(reviewData)
+    .then(() => {
+      alert("Thank you! Your review has been submitted.");
+      state.showReviewForm = false;
+      render(); // refresh the page
+    })
+    .catch((error) => {
+      console.error("Error adding review: ", error);
+      alert("Failed to submit review: " + error.message);
+    });
 }
+
+async function fetchReviews() {
+  try {
+    const snapshot = await db.collection("reviews").orderBy("date", "desc").get();
+    state.reviews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error("Error fetching reviews: ", error);
+    state.reviews = [];
+  }
+}
+
 
 // ============================================
 // MAIN RENDER FUNCTION
 // ============================================
 
-function render() {
+async function render() {
   const app = document.getElementById("app")
-
   let content = ""
+
+  if (state.currentPage === "community") {
+    await fetchReviews(); // fetch reviews from Firestore
+  }
+
   switch (state.currentPage) {
-    case "home":
-      content = HomePage()
-      break
-    case "explore":
-      content = ExplorePage()
-      break
-    case "practice":
-      content = PracticePage()
-      break
-    case "resume":
-      content = ResumePage()
-      break
-    case "trends":
-      content = TrendsPage()
-      break
-    case "community":
-      content = CommunityPage()
-      break
-    default:
-      content = HomePage()
+    case "home": content = HomePage(); break
+    case "explore": content = ExplorePage(); break
+    case "practice": content = PracticePage(); break
+    case "resume": content = ResumePage(); break
+    case "trends": content = TrendsPage(); break
+    case "community": content = CommunityPage(); break
+    case "signIn": content = SignInPage(); break
+    case "getStarted": content = GetStartedPage(); break
+    default: content = HomePage()
   }
 
   app.innerHTML = Navigation() + content + Footer()
-
-  // Initialize scroll animations
   initScrollAnimations()
-
-  // Initialize navbar scroll effect
   initNavbarScroll()
 }
+
+
+function markHelpful(reviewId) {
+  const reviewRef = db.collection("reviews").doc(reviewId);
+
+  reviewRef
+    .update({
+      helpful: firebase.firestore.FieldValue.increment(1)
+    })
+    .then(() => {
+      // Update local state to reflect change immediately
+      const review = state.reviews.find(r => r.id === reviewId);
+      if (review) review.helpful++;
+      render();
+    })
+    .catch((error) => {
+      console.error("Error updating helpful count: ", error);
+      alert("Failed to mark as helpful: " + error.message);
+    });
+}
+
+function PracticeSessionPage() {
+  const role = PRACTICE_ROLES.find(
+    r => r.id === state.practiceMode.selectedRole
+  );
+
+  return `
+    <div class="page-container">
+      <div class="page-header">
+        <h1 class="page-title">${role.title} Simulation</h1>
+        <p class="page-subtitle">
+          Difficulty: ${role.difficulty}
+        </p>
+      </div>
+
+      <div class="practice-session">
+        <p>This is where challenges will go.</p>
+
+        <button class="btn btn-secondary" onclick="navigate('practice')">
+          Back to Practice
+        </button>
+      </div>
+    </div>
+  `;
+}
+function startPracticeSession() {
+  state.currentPage = "practiceSession";
+  render();
+}
+
 
 function initScrollAnimations() {
   const observer = new IntersectionObserver(
@@ -1348,3 +1551,4 @@ function initNavbarScroll() {
 document.addEventListener("DOMContentLoaded", () => {
   render()
 })
+
