@@ -20,6 +20,8 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+
+
 const state = {
   currentPage: "home",
   internships: [],
@@ -141,50 +143,66 @@ const PRACTICE_ROLES = [
     title: "Software Engineer",
     icon: "💻",
     difficulty: "Medium",
-    skills: ["Coding", "Problem Solving", "Algorithms"],
-    challenges: 15,
-  },
-  {
-    id: "design",
-    title: "Product Designer",
-    icon: "🎨",
-    difficulty: "Easy",
-    skills: ["UI/UX", "Prototyping", "User Research"],
-    challenges: 12,
+    skills: ["Coding", "Algorithms", "Problem Solving"],
+    curriculum: [
+      {
+        id: "module1",
+        title: "Algorithms Basics",
+        description: "Learn sorting, searching, and basic array manipulations",
+        challenges: [
+          { id: "c1", title: "Implement Bubble Sort", points: 10, code: "" },
+          { id: "c2", title: "Binary Search Implementation", points: 10, code: "" },
+          { id: "c3", title: "Array Manipulations Exercises", points: 10, code: "" },
+        ],
+      },
+      {
+        id: "module2",
+        title: "Data Structures",
+        description: "Learn stacks, queues, and linked lists",
+        challenges: [
+          { id: "c4", title: "Stack with JS Array", points: 10, code: "" },
+          { id: "c5", title: "Queue using Linked List", points: 10, code: "" },
+        ],
+      },
+      {
+        id: "module3",
+        title: "Mini Project",
+        description: "Apply algorithms and data structures in a project",
+        challenges: [
+          { id: "c6", title: "Todo App with Sorting", points: 20, code: "" },
+        ],
+      },
+    ],
   },
   {
     id: "data",
     title: "Data Scientist",
     icon: "📊",
     difficulty: "Hard",
-    skills: ["Statistics", "Python", "ML"],
-    challenges: 18,
+    skills: ["Python", "ML", "Statistics"],
+    curriculum: [
+      {
+        id: "module1",
+        title: "Python for Data Science",
+        description: "NumPy, Pandas, and basic data manipulation",
+        challenges: [
+          { id: "c1", title: "Data Cleaning with Pandas", points: 10, code: "" },
+          { id: "c2", title: "NumPy Array Operations", points: 10, code: "" },
+        ],
+      },
+      {
+        id: "module2",
+        title: "Machine Learning Intro",
+        description: "Learn regression, classification, and evaluation metrics",
+        challenges: [
+          { id: "c3", title: "Linear Regression on Sample Dataset", points: 15, code: "" },
+          { id: "c4", title: "Classification with KNN", points: 15, code: "" },
+        ],
+      },
+    ],
   },
-  {
-    id: "marketing",
-    title: "Marketing Intern",
-    icon: "📱",
-    difficulty: "Easy",
-    skills: ["Content", "Analytics", "Social Media"],
-    challenges: 10,
-  },
-  {
-    id: "business",
-    title: "Business Analyst",
-    icon: "📈",
-    difficulty: "Medium",
-    skills: ["Excel", "Reporting", "Strategy"],
-    challenges: 14,
-  },
-  {
-    id: "pm",
-    title: "Product Manager",
-    icon: "🚀",
-    difficulty: "Hard",
-    skills: ["Strategy", "Leadership", "Analysis"],
-    challenges: 16,
-  },
-]
+];
+
 
 const TRENDING_SKILLS = [
   { name: "React", demand: 92, growth: "+15%" },
@@ -829,54 +847,35 @@ function ResumePage() {
                   </defs>
                 </svg>
                 <div class="score-text">
-                  <span class="score-number">${state.resumeAnalysis.score}</span>
+                  <span class="score-number">${state.resumeAnalysis.overallScore ?? 0}</span>
                   <span class="score-label">/100</span>
                 </div>
               </div>
               <p class="score-description">${state.resumeAnalysis.message}</p>
             </div>
+<div class="analysis-sections">
+  <div class="analysis-section">
+    <h3>Strengths</h3>
+    <ul class="analysis-list">
+      ${(state.resumeAnalysis?.strengths || []).map(s => `<li class="strength-item">${s}</li>`).join("")}
+    </ul>
+  </div>
 
-            <div class="analysis-sections">
-              <div class="analysis-section">
-                <h3>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                  Strengths
-                </h3>
-                <ul class="analysis-list">
-                  ${state.resumeAnalysis.strengths.map((s) => `<li class="strength-item">${s}</li>`).join("")}
-                </ul>
-              </div>
+  <div class="analysis-section">
+    <h3>Areas to Improve</h3>
+    <ul class="analysis-list">
+      ${(state.resumeAnalysis?.improvements || []).map(i => `<li class="improvement-item">${i}</li>`).join("")}
+    </ul>
+  </div>
 
-              <div class="analysis-section">
-                <h3>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" x2="12" y1="8" y2="12"/>
-                    <line x1="12" x2="12.01" y1="16" y2="16"/>
-                  </svg>
-                  Areas to Improve
-                </h3>
-                <ul class="analysis-list">
-                  ${state.resumeAnalysis.improvements.map((i) => `<li class="improvement-item">${i}</li>`).join("")}
-                </ul>
-              </div>
+  <div class="analysis-section">
+    <h3>Recommended Skills to Learn</h3>
+    <div class="skills-grid">
+      ${(state.resumeAnalysis?.recommendedSkills || []).map(skill => `<span class="skill-badge">${skill.name}</span>`).join("")}
+    </div>
+  </div>
+</div>
 
-              <div class="analysis-section">
-                <h3>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 20h9"/>
-                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                  </svg>
-                  Recommended Skills to Learn
-                </h3>
-                <div class="skills-grid">
-                  ${state.resumeAnalysis.skills.map((skill) => `<span class="skill-badge">${skill}</span>`).join("")}
-                </div>
-              </div>
-            </div>
-          </div>
         `
             : ""
         }
@@ -1268,6 +1267,8 @@ function Footer() {
 // ============================================
 // EVENT HANDLERS
 
+
+
 function handleResumeUpload(input) {
   if (input.files && input.files[0]) {
     document.getElementById("resumeFileName").textContent = `✓ ${input.files[0].name}`
@@ -1310,34 +1311,135 @@ function selectPracticeRole(roleId) {
   state.practiceMode.selectedRole = roleId
   render()
 }
+async function analyzeResume() {
+  const resumeFile = document.getElementById('resumeInput').files[0];
+  const codeFile = document.getElementById('codingFilesInput').files[0];
+  const analyzeBtn = document.getElementById('analyzeBtn');
 
-function analyzeResume() {
-  // Simulate AI analysis
-  setTimeout(() => {
-    state.resumeAnalysis = {
-      score: 78,
-      message: "Good foundation! Focus on adding more quantifiable achievements.",
-      strengths: [
-        "Strong technical skills section",
-        "Clear work experience descriptions",
-        "Well-formatted and easy to read",
-        "Good use of action verbs",
-      ],
-      improvements: [
-        "Add more quantifiable metrics (numbers, percentages)",
-        "Include specific project outcomes",
-        "Expand on leadership experiences",
-        "Add relevant coursework or certifications",
-      ],
-      skills: ["Docker", "Kubernetes", "System Design", "GraphQL", "TypeScript"],
+  if (!resumeFile || !codeFile) {
+    alert('Please select both a resume (PDF/DOCX) and a code ZIP file.');
+    return;
+  }
+
+  // Disable button while analyzing
+  analyzeBtn.disabled = true;
+  analyzeBtn.textContent = 'Analyzing...';
+
+  const formData = new FormData();
+  formData.append('resume', resumeFile);
+  formData.append('code', codeFile);
+
+  try {
+    const response = await fetch('http://localhost:3000/api/analyze', {
+      method: 'POST',
+      body: formData
+    });
+
+    const result = await response.json();
+
+    if (!result.success || !result.analysis) {
+      alert(result.error || 'Analysis failed. Check console for details.');
+      console.error(result);
+      analyzeBtn.disabled = false;
+      analyzeBtn.textContent = 'Analyze with Gemini AI';
+      return;
     }
-    render()
-  }, 1500)
+
+    // Save analysis to state
+    state.resumeAnalysis = result.analysis;
+
+    // Re-render the Resume page to show results under upload section
+    render();
+
+    // Re-enable button
+    analyzeBtn.disabled = false;
+    analyzeBtn.textContent = 'Analyze with Gemini AI';
+  } catch (err) {
+    console.error('Error analyzing resume:', err);
+    alert('Error analyzing resume. Check console.');
+    analyzeBtn.disabled = false;
+    analyzeBtn.textContent = 'Analyze with Gemini AI';
+  }
 }
+
+
+
 
 function applyToInternship(id) {
   alert(`Application started for internship #${id}! (This would redirect to the application page)`)
 }
+
+
+
+const ELEVEN_LABS_API_KEY = "45eefb5fd2a8aed8170a5f586745841786a723ba147e15ce76942998e6a65d08";
+const ELEVEN_LABS_VOICE_ID = "gJx1vCzNCD1EQHT212Ls";
+
+async function speakWithAssistant(promptText) {
+  try {
+    // ElevenLabs TTS
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${ELEVEN_LABS_VOICE_ID}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "xi-api-key": ELEVEN_LABS_API_KEY,
+      },
+      body: JSON.stringify({ text: promptText, voice_settings: { stability: 0.5, similarity_boost: 0.7 } }),
+    });
+
+    if (!response.ok) throw new Error("Failed to generate speech.");
+    const audioBlob = await response.blob();
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(audioUrl);
+    audio.play();
+  } catch (error) {
+    console.error("Assistant error:", error);
+  }
+}
+
+async function getAssistantResponse(userQuery) {
+  try {
+    const systemPrompt = `
+      You are the InternHub AI Assistant. Please be extremely nice to all users.
+      InternHub is an internship aggregator that helps students find verified internships, practice skills, and get AI resume analysis.
+
+      ${
+        state.resumeAnalysis
+          ? `Current resume analysis data:
+- Overall Score: ${state.resumeAnalysis.overallScore}/100
+- Strengths: ${(state.resumeAnalysis.strengths || []).join(', ') || 'None'}
+- Improvements: ${(state.resumeAnalysis.improvements || []).join(', ') || 'None'}
+- Recommended Skills: ${(state.resumeAnalysis.recommendedSkills || []).map(s => s.name).join(', ') || 'None'}
+- Detected Skills: ${(state.resumeAnalysis.detectedSkills?.technical || []).map(s => s.name).join(', ') || 'None'}
+Use this information to answer questions about the user's resume and code.`
+          : ''
+      }
+    `;
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer `
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userQuery }
+        ],
+        max_tokens: 300
+      })
+    });
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+  } catch (err) {
+    console.error("Assistant error:", err);
+    return "Sorry, I couldn't process that. Try again!";
+  }
+}
+
+
 
 function markHelpful(reviewId) {
   const review = REVIEWS.find((r) => r.id === reviewId)
@@ -1367,59 +1469,49 @@ function toggleReviewForm() {
   }
 }
 
+// Use emulator if running locally
+if (location.hostname === "localhost") {
+  db.useEmulator("localhost", 8080);
+}
+
 function submitReview(event) {
   event.preventDefault();
-
-  const user = auth.currentUser;
-  if (!user) {
-    alert("You must be signed in to submit a review.");
-    return;
-  }
-
   const company = document.getElementById("reviewCompany").value;
   const role = document.getElementById("reviewRole").value;
   const author = document.getElementById("reviewAuthor").value;
-  const rating = Number.parseInt(document.getElementById("reviewRating").value);
+  const rating = Number(document.getElementById("reviewRating").value);
   const text = document.getElementById("reviewText").value;
-
   const warningCheckboxes = document.querySelectorAll('input[name="warnings"]:checked');
-  const warnings = Array.from(warningCheckboxes).map((cb) => cb.value);
+  const warnings = Array.from(warningCheckboxes).map(cb => cb.value);
 
-  const reviewData = {
+  db.collection("reviews").add({
     company,
     role,
     author,
     rating,
     text,
     warnings,
-    verified: false,          // will be manually verified later
+    verified: false,
     helpful: 0,
-    date: new Date().toISOString(),
-    userId: user.uid          // track which user submitted
-  };
-
-  db.collection("reviews")
-    .add(reviewData)
-    .then(() => {
-      alert("Thank you! Your review has been submitted.");
-      state.showReviewForm = false;
-      render(); // refresh the page
-    })
-    .catch((error) => {
-      console.error("Error adding review: ", error);
-      alert("Failed to submit review: " + error.message);
-    });
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  })
+  .then(() => {
+    alert("Review submitted! It will appear once verified.");
+    navigate("community");
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Error submitting review.");
+  });
 }
 
 async function fetchReviews() {
-  try {
-    const snapshot = await db.collection("reviews").orderBy("date", "desc").get();
-    state.reviews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch (error) {
-    console.error("Error fetching reviews: ", error);
-    state.reviews = [];
-  }
+  return db.collection("reviews")
+    .orderBy("createdAt", "desc")
+    .get()
+    .then(snapshot => snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 }
+
 
 
 // ============================================
@@ -1431,7 +1523,7 @@ async function render() {
   let content = ""
 
   if (state.currentPage === "community") {
-    await fetchReviews(); // fetch reviews from Firestore
+    const reviews = await fetchReviews(); // fetch reviews from Firestore
   }
 
   switch (state.currentPage) {
@@ -1455,20 +1547,12 @@ async function render() {
 function markHelpful(reviewId) {
   const reviewRef = db.collection("reviews").doc(reviewId);
 
-  reviewRef
-    .update({
-      helpful: firebase.firestore.FieldValue.increment(1)
-    })
-    .then(() => {
-      // Update local state to reflect change immediately
-      const review = state.reviews.find(r => r.id === reviewId);
-      if (review) review.helpful++;
-      render();
-    })
-    .catch((error) => {
-      console.error("Error updating helpful count: ", error);
-      alert("Failed to mark as helpful: " + error.message);
-    });
+  // Atomically increment the helpful counter
+  reviewRef.update({
+    helpful: firebase.firestore.FieldValue.increment(1)
+  })
+  .then(() => render())
+  .catch(err => console.error("Error updating helpful count:", err));
 }
 
 function PracticeSessionPage() {
@@ -1544,11 +1628,77 @@ function initNavbarScroll() {
   })
 }
 
+async function render() {
+  const app = document.getElementById("app")
+  let content = ""
+
+  if (state.currentPage === "community") {
+    state.reviews = await fetchReviews();
+  }
+
+  switch (state.currentPage) {
+    case "home": content = HomePage(); break
+    case "explore": content = ExplorePage(); break
+    case "practice": content = PracticePage(); break
+    case "practiceSession": content = PracticeSessionPage(); break
+    case "resume": content = ResumePage(); break
+    case "trends": content = TrendsPage(); break
+    case "community": content = CommunityPage(); break
+    case "signIn": content = SignInPage(); break
+    case "getStarted": content = GetStartedPage(); break
+    default: content = HomePage()
+  }
+
+  app.innerHTML = Navigation() + content + Footer()
+  initScrollAnimations()
+  initNavbarScroll()
+}
+
 // ============================================
 // INITIALIZE APP
 // ============================================
 
 document.addEventListener("DOMContentLoaded", () => {
-  render()
-})
+  render();
 
+  // Assistant button
+  const assistantBtn = document.getElementById("assistant-btn");
+  const assistantChat = document.getElementById("assistant-chat");
+  const assistantSend = document.getElementById("assistant-send");
+  const assistantInput = document.getElementById("assistant-input");
+
+  if (assistantBtn) {
+    assistantBtn.addEventListener("click", () => {
+      if (!assistantChat) return;
+      assistantChat.style.display = assistantChat.style.display === "none" ? "block" : "none";
+      speakWithAssistant("Hello! I am your InternHub AI assistant. I can guide you through the app, explain features, and suggest skills to improve on your resume.");
+    });
+  }
+
+  if (assistantSend) {
+    assistantSend.addEventListener("click", async () => {
+      if (!assistantInput || !assistantChat) return;
+      const userQuery = assistantInput.value.trim();
+      if (!userQuery) return;
+
+      // Display user question
+      const userMessage = document.createElement("div");
+      userMessage.className = "assistant-message user-message";
+      userMessage.textContent = userQuery;
+      assistantChat.appendChild(userMessage);
+
+      // Clear input
+      assistantInput.value = "";
+
+      // Get assistant response
+      const assistantResponse = await getAssistantResponse(userQuery);
+
+
+      // Speak the response
+      speakWithAssistant(assistantResponse);
+
+      // Scroll to bottom
+      assistantChat.scrollTop = assistantChat.scrollHeight;
+    });
+  }
+});
