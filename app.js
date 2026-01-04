@@ -1,5 +1,5 @@
 // ============================================
-// INTERNCONNECT
+// INTERNHUB - COMPLETE VANILLA JS APPLICATION
 // ============================================
 
 // State Management
@@ -19,8 +19,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-
-
 
 const state = {
   currentPage: "home",
@@ -48,6 +46,56 @@ const state = {
   showReviewForm: false,
   searchQuery: "",
 }
+
+// ============================================
+// UTILITY FUNCTIONS (NEW - PREVENTS SEARCH REFRESH)
+// ============================================
+
+// Debounce function to limit how often we re-render
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+// Focus preservation utilities
+let activeElementInfo = null;
+
+function saveFocus() {
+  const activeElement = document.activeElement;
+  if (activeElement && activeElement.id) {
+    activeElementInfo = {
+      id: activeElement.id,
+      selectionStart: activeElement.selectionStart,
+      selectionEnd: activeElement.selectionEnd,
+      value: activeElement.value
+    };
+  }
+}
+
+function restoreFocus() {
+  if (activeElementInfo) {
+    const element = document.getElementById(activeElementInfo.id);
+    if (element && element.value === activeElementInfo.value) {
+      element.focus();
+      if (activeElementInfo.selectionStart !== null) {
+        element.setSelectionRange(
+          activeElementInfo.selectionStart,
+          activeElementInfo.selectionEnd
+        );
+      }
+    }
+  }
+  activeElementInfo = null;
+}
+
+const debouncedRender = debounce(() => render(), 250);
 
 // Mock Data
 const MOCK_INTERNSHIPS = [
@@ -144,6 +192,7 @@ const PRACTICE_ROLES = [
     icon: "💻",
     difficulty: "Medium",
     skills: ["Coding", "Algorithms", "Problem Solving"],
+    challenges: 12,
     curriculum: [
       {
         id: "module1",
@@ -180,6 +229,7 @@ const PRACTICE_ROLES = [
     icon: "📊",
     difficulty: "Hard",
     skills: ["Python", "ML", "Statistics"],
+    challenges: 8,
     curriculum: [
       {
         id: "module1",
@@ -202,7 +252,6 @@ const PRACTICE_ROLES = [
     ],
   },
 ];
-
 
 const TRENDING_SKILLS = [
   { name: "React", demand: 92, growth: "+15%" },
@@ -313,7 +362,7 @@ function Navigation() {
               <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
             </svg>
           </div>
-          <span class="logo-text">InternConnect</span>
+          <span class="logo-text">InternHub</span>
         </a>
 
         <div class="nav-links">
@@ -379,7 +428,8 @@ function HomePage() {
                  id="heroSearch" 
                  placeholder="Search internships, companies, roles..." 
                  class="search-input"
-                 value="${state.searchQuery}">
+                 value="${state.searchQuery}"
+                 onkeypress="if(event.key==='Enter') searchFromHero()">
           <button class="btn btn-primary" onclick="searchFromHero()">Search</button>
         </div>
 
@@ -476,7 +526,7 @@ function SignInPage() {
     <div class="page-container">
       <div class="page-header">
         <h1 class="page-title">Sign In</h1>
-        <p class="page-subtitle">Access your InternConnect account</p>
+        <p class="page-subtitle">Access your InternHub account</p>
       </div>
 
       <form class="auth-form" onsubmit="signIn(event)">
@@ -503,7 +553,7 @@ function GetStartedPage() {
     <div class="page-container">
       <div class="page-header">
         <h1 class="page-title">Get Started</h1>
-        <p class="page-subtitle">Create your InternConnect account</p>
+        <p class="page-subtitle">Create your InternHub account</p>
       </div>
 
       <form class="auth-form" onsubmit="signUp(event)">
@@ -525,7 +575,6 @@ function GetStartedPage() {
   `;
 }
 
-
 function signIn(event) {
   event.preventDefault();
   const email = document.getElementById("signInEmail").value;
@@ -542,7 +591,6 @@ function signIn(event) {
       alert(error.message);
     });
 }
-
 
 function signUp(event) {
   event.preventDefault();
@@ -572,9 +620,6 @@ function signOutUser() {
     });
 }
 
-
-
-
 function handleSignIn() {
   const email = document.getElementById("signInEmail").value
   const password = document.getElementById("signInPassword").value
@@ -587,11 +632,6 @@ function handleSignIn() {
     alert("Please enter your email and password.")
   }
 }
-
-
-
-
-
 
 function ExplorePage() {
   const filteredInternships = MOCK_INTERNSHIPS.filter((internship) => {
@@ -621,10 +661,15 @@ function ExplorePage() {
             <path d="m21 21-4.3-4.3"/>
           </svg>
           <input type="text" 
+                 id="exploreSearch"
                  placeholder="Search by role, company, or skill..." 
                  class="filter-input"
                  value="${state.filters.search}"
-                 onkeyup="updateFilter('search', this.value)">
+                 onkeypress="if(event.key==='Enter') {
+                   state.filters.search = this.value;
+                   render();
+                 }"
+                 oninput="updateFilter('search', this.value)">
         </div>
         
         <select class="filter-select" onchange="updateFilter('location', this.value)">
@@ -783,7 +828,7 @@ function ResumePage() {
           <div class="upload-card">
             <div class="upload-icon">
               <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
                 <polyline points="14 2 14 8 20 8"/>
                 <line x1="16" x2="8" y1="13" y2="13"/>
                 <line x1="16" x2="8" y1="17" y2="17"/>
@@ -901,7 +946,7 @@ function TrendsPage() {
               <div class="skill-bar" style="animation-delay: ${index * 0.1}s">
                 <div class="skill-info">
                   <span class="skill-name">${skill.name}</span>
-                  <span class="skill-growth ${skill.growth.startsWith("+") ? "positive" : "negative"}">${skill.growth}</span>
+                  <span class="skill-growth ${skill.growth.startsWith('+') ? 'positive' : 'negative'}">${skill.growth}</span>
                 </div>
                 <div class="skill-progress">
                   <div class="skill-fill" style="width: ${skill.demand}%"></div>
@@ -988,7 +1033,6 @@ function TrendsPage() {
 function CommunityPage() {
   const filteredReviews = state.reviews ? [...state.reviews] : [];
 
-
   // Apply filters
   if (state.communityFilters.company) {
     filteredReviews = filteredReviews.filter((r) =>
@@ -1029,10 +1073,15 @@ function CommunityPage() {
               <path d="m21 21-4.3-4.3"/>
             </svg>
             <input type="text" 
+                   id="communitySearch"
                    placeholder="Search by company..." 
                    class="filter-input"
                    value="${state.communityFilters.company}"
-                   onkeyup="updateCommunityFilter('company', this.value)">
+                   onkeypress="if(event.key==='Enter') {
+                     state.communityFilters.company = this.value;
+                     render();
+                   }"
+                   oninput="updateCommunityFilter('company', this.value)">
           </div>
 
           <select class="filter-select" onchange="updateCommunityFilter('rating', this.value)">
@@ -1229,7 +1278,7 @@ function Footer() {
                   <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
                 </svg>
               </div>
-              <span class="logo-text">InternConnect</span>
+              <span class="logo-text">InternHub</span>
             </div>
             <p class="footer-tagline">Breaking gatekeeping, one internship at a time.</p>
           </div>
@@ -1257,7 +1306,7 @@ function Footer() {
         </div>
         
         <div class="footer-bottom">
-          <p>&copy; 2026 InternConnect. Built for students, by students</p>
+          <p>&copy; 2026 InternHub. Built with ❤️ for students.</p>
         </div>
       </div>
     </footer>
@@ -1266,8 +1315,6 @@ function Footer() {
 
 // ============================================
 // EVENT HANDLERS
-
-
 
 function handleResumeUpload(input) {
   if (input.files && input.files[0]) {
@@ -1302,15 +1349,17 @@ function searchFromHero() {
   }
 }
 
+// MODIFIED: Now uses debounced render to prevent refresh on every keystroke
 function updateFilter(key, value) {
   state.filters[key] = value
-  render()
+  debouncedRender()
 }
 
 function selectPracticeRole(roleId) {
   state.practiceMode.selectedRole = roleId
   render()
 }
+
 async function analyzeResume() {
   const resumeFile = document.getElementById('resumeInput').files[0];
   const codeFile = document.getElementById('codingFilesInput').files[0];
@@ -1362,14 +1411,9 @@ async function analyzeResume() {
   }
 }
 
-
-
-
 function applyToInternship(id) {
   alert(`Application started for internship #${id}! (This would redirect to the application page)`)
 }
-
-
 
 const ELEVEN_LABS_API_KEY = "45eefb5fd2a8aed8170a5f586745841786a723ba147e15ce76942998e6a65d08";
 const ELEVEN_LABS_VOICE_ID = "gJx1vCzNCD1EQHT212Ls";
@@ -1399,8 +1443,8 @@ async function speakWithAssistant(promptText) {
 async function getAssistantResponse(userQuery) {
   try {
     const systemPrompt = `
-      You are the InternConnect AI Assistant. Please be extremely nice to all users.
-      InternConnect is an internship aggregator that helps students find verified internships, practice skills, and get AI resume analysis.
+      You are the InternHub AI Assistant. Please be extremely nice to all users.
+      InternHub is an internship aggregator that helps students find verified internships, practice skills, and get AI resume analysis.
 
       ${
         state.resumeAnalysis
@@ -1439,14 +1483,15 @@ Use this information to answer questions about the user's resume and code.`
   }
 }
 
-
-
 function markHelpful(reviewId) {
-  const review = REVIEWS.find((r) => r.id === reviewId)
-  if (review) {
-    review.helpful++
-    render()
-  }
+  const reviewRef = db.collection("reviews").doc(reviewId);
+
+  // Atomically increment the helpful counter
+  reviewRef.update({
+    helpful: firebase.firestore.FieldValue.increment(1)
+  })
+  .then(() => render())
+  .catch(err => console.error("Error updating helpful count:", err));
 }
 
 function sortInternships(sortBy) {
@@ -1454,9 +1499,10 @@ function sortInternships(sortBy) {
   render()
 }
 
+// MODIFIED: Now uses debounced render to prevent refresh on every keystroke
 function updateCommunityFilter(key, value) {
   state.communityFilters[key] = value
-  render()
+  debouncedRender()
 }
 
 function toggleReviewForm() {
@@ -1512,49 +1558,6 @@ async function fetchReviews() {
     .then(snapshot => snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 }
 
-
-
-// ============================================
-// MAIN RENDER FUNCTION
-// ============================================
-
-async function render() {
-  const app = document.getElementById("app")
-  let content = ""
-
-  if (state.currentPage === "community") {
-    const reviews = await fetchReviews(); // fetch reviews from Firestore
-  }
-
-  switch (state.currentPage) {
-    case "home": content = HomePage(); break
-    case "explore": content = ExplorePage(); break
-    case "practice": content = PracticePage(); break
-    case "resume": content = ResumePage(); break
-    case "trends": content = TrendsPage(); break
-    case "community": content = CommunityPage(); break
-    case "signIn": content = SignInPage(); break
-    case "getStarted": content = GetStartedPage(); break
-    default: content = HomePage()
-  }
-
-  app.innerHTML = Navigation() + content + Footer()
-  initScrollAnimations()
-  initNavbarScroll()
-}
-
-
-function markHelpful(reviewId) {
-  const reviewRef = db.collection("reviews").doc(reviewId);
-
-  // Atomically increment the helpful counter
-  reviewRef.update({
-    helpful: firebase.firestore.FieldValue.increment(1)
-  })
-  .then(() => render())
-  .catch(err => console.error("Error updating helpful count:", err));
-}
-
 function PracticeSessionPage() {
   const role = PRACTICE_ROLES.find(
     r => r.id === state.practiceMode.selectedRole
@@ -1583,7 +1586,6 @@ function startPracticeSession() {
   state.currentPage = "practiceSession";
   render();
 }
-
 
 function initScrollAnimations() {
   const observer = new IntersectionObserver(
@@ -1628,7 +1630,10 @@ function initNavbarScroll() {
   })
 }
 
+// MODIFIED: Enhanced render function with focus preservation
 async function render() {
+  saveFocus(); // Save focus before re-rendering
+  
   const app = document.getElementById("app")
   let content = ""
 
@@ -1652,6 +1657,8 @@ async function render() {
   app.innerHTML = Navigation() + content + Footer()
   initScrollAnimations()
   initNavbarScroll()
+  
+  restoreFocus(); // Restore focus after re-rendering
 }
 
 // ============================================
@@ -1671,7 +1678,7 @@ document.addEventListener("DOMContentLoaded", () => {
     assistantBtn.addEventListener("click", () => {
       if (!assistantChat) return;
       assistantChat.style.display = assistantChat.style.display === "none" ? "block" : "none";
-      speakWithAssistant("Hello! I am your InternConnect AI assistant. I can guide you through the app, explain features, and suggest skills to improve on your resume.");
+      speakWithAssistant("Hello! I am your InternHub AI assistant. I can guide you through the app, explain features, and suggest skills to improve on your resume.");
     });
   }
 
@@ -1693,7 +1700,6 @@ document.addEventListener("DOMContentLoaded", () => {
       // Get assistant response
       const assistantResponse = await getAssistantResponse(userQuery);
 
-
       // Speak the response
       speakWithAssistant(assistantResponse);
 
@@ -1702,3 +1708,4 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
